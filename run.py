@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     """main part"""
     time = 0
-    while ball.right_border_x < WORLD_WIDTH or ball.down_border_y < WORLD_HEIGHT or ball.upper_border_y > 0:
+    while ball.right_border_x < WORLD_WIDTH and ball.down_border_y < WORLD_HEIGHT and ball.upper_border_y > 0:
         time += 1
         ball.horizontal_shift(time)
         ball.vertical_shift(time)
