@@ -10,10 +10,10 @@ class Ball:
         self.center_y = start_y
         self.radius = radius
 
-        self.left_border = self.center_x - self.radius
-        self.right_border = self.center_x + self.radius
-        self.upper_border = self.center_y - self.radius
-        self.down_border = self.center_y + self.radius
+        self.left_border_x = self.center_x - self.radius
+        self.right_border_x = self.center_x + self.radius
+        self.upper_border_y = self.center_y - self.radius
+        self.down_border_y = self.center_y + self.radius
 
         self.horizontal_a = 0
         self.horizontal_v = 0
@@ -22,10 +22,10 @@ class Ball:
         self.vertical_v = 0
 
     def update_borders(self):
-        self.left_border = self.center_x - self.radius
-        self.right_border = self.center_x + self.radius
-        self.upper_border = self.center_y - self.radius
-        self.down_border = self.center_y + self.radius
+        self.left_border_x = self.center_x - self.radius
+        self.right_border_x = self.center_x + self.radius
+        self.upper_border_y = self.center_y - self.radius
+        self.down_border_y = self.center_y + self.radius
 
     def horizontal_acceleration_decrease(self, hor_decrease):
         self.horizontal_a -= hor_decrease

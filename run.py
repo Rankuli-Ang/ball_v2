@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     """main part"""
     time = 0
-    while ball.right_border < 100 or ball.down_border > 100 or ball.upper_border < 0:
+    while ball.right_border_x < WORLD_WIDTH or ball.down_border_y < WORLD_HEIGHT or ball.upper_border_y > 0:
         time += 1
         ball.horizontal_shift(time)
         ball.vertical_shift(time)
@@ -77,4 +77,10 @@ if __name__ == "__main__":
         aim = analyzer.analyze()
         if aim is not None:
             prognosticator.collect_data(aim)
+        else:
+            if prognosticator.data:
+                prognosis = prognosticator.prognostication(WORLD_WIDTH, BALL_RADIUS)
+                racket.aiming(WORLD_HEIGHT, prognosis)
+                prognosticator.data.clear()
+
 
