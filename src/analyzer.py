@@ -10,7 +10,9 @@ class Analyzer:
         self.start_frame = start_frame
         self.end_frame = end_frame
 
-    def analyze(self):
+    def analyze(self) -> tuple:
+        """Detected ball in the picture of the simulation
+        and returns ball coordinates."""
         raw_img = cv2.imread("./output/vis.png", cv2.IMREAD_GRAYSCALE)
         gray = raw_img[:, self.start_frame:self.end_frame]
 
@@ -32,5 +34,5 @@ class Analyzer:
                 cv2.circle(gray, center, radius, (255, 0, 255), 3)
                 cv2.imshow("detected_circle", gray)
                 cv2.waitKey(100)
-                print('center', center)
+                print('ball coordinates', center)
                 return center

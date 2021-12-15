@@ -21,20 +21,20 @@ class Ball:
         self.vertical_a = 0
         self.vertical_v = 0
 
-    def update_borders(self):
+    def update_borders(self) -> None:
         self.left_border_x = self.center_x - self.radius
         self.right_border_x = self.center_x + self.radius
         self.upper_border_y = self.center_y - self.radius
         self.down_border_y = self.center_y + self.radius
 
-    def horizontal_acceleration_decrease(self, hor_decrease):
+    def horizontal_acceleration_decrease(self, hor_decrease) -> None:
         self.horizontal_a -= hor_decrease
 
-    def vertical_acceleration_decrease(self, vert_decrease):
+    def vertical_acceleration_decrease(self, vert_decrease) -> None:
         self.vertical_a -= vert_decrease
 
-    def horizontal_shift(self, time: int):
+    def horizontal_shift(self, time: int) -> None:
         self.center_x = round((self.horizontal_a * time) / 2 + self.horizontal_v * time + self.start_x)
 
-    def vertical_shift(self, time: int):
+    def vertical_shift(self, time: int) -> None:
         self.center_y = round((self.vertical_a * time) / 2 + self.vertical_v * time + self.start_y)

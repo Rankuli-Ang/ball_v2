@@ -22,7 +22,7 @@ class World:
 
         self.racket_color = racket_color
 
-    def draw_frame(self, visualization):
+    def draw_frame(self, visualization) -> None:
         start_frame_counter = 0
         end_frame_counter = 0
 
@@ -35,7 +35,7 @@ class World:
             end_frame_counter += 1
 
     def draw_racket(self, visualization,
-                    racket_plane: int, racket_center: int, racket_size: int):
+                    racket_plane: int, racket_center: int, racket_size: int) -> None:
         counter = 0
         while counter <= racket_size:
             if racket_center + counter < self.height:
@@ -44,11 +44,13 @@ class World:
                     visualization[racket_center - counter][racket_plane] = self.racket_color
             counter += 1
 
-    def draw_ball(self, visualization, ball_x: int, ball_y: int):
+    def draw_ball(self, visualization, ball_x: int, ball_y: int) -> None:
         cv2.circle(visualization, (ball_y, ball_x), self.ball_radius, self.ball_color, thickness=-1)
 
     def visualize(self, ball_x: int, ball_y: int,
-                  racket_plane: int, racket_center: int, racket_size: int):
+                  racket_plane: int, racket_center: int, racket_size: int) -> None:
+        """Visualizes simulation
+        and saves picture of the simulation to the "output" directory."""
         vis = np.zeros((self.height, self.width, 3), dtype='uint8')
 
         self.draw_frame(vis)

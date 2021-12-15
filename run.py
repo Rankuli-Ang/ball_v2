@@ -76,11 +76,25 @@ if __name__ == "__main__":
         world.visualize(ball.center_y, ball.center_x, racket.plane_x, racket.center_y, racket.size)
         aim = analyzer.analyze()
         if aim is not None:
+            racket.aiming(WORLD_HEIGHT, aim[1])
             prognosticator.collect_data(aim)
         else:
             if prognosticator.data:
                 prognosis = prognosticator.prognostication(WORLD_WIDTH, BALL_RADIUS)
                 racket.aiming(WORLD_HEIGHT, prognosis)
                 prognosticator.data.clear()
+
+    print('------------')
+    print('results:')
+    print('ball center coordinates is ', ball.center_x, ball.center_y)
+    print('racket center y is ', racket.center_y)
+    racket_upper_edge = racket.get_racket_upper_edge_y()
+    print('racket upper edge', racket_upper_edge)
+    racket_down_edge = racket.get_racket_down_edge_y()
+    print('racket down edge', racket_down_edge)
+    if racket_upper_edge <= ball.center_y <= racket_down_edge:
+        print('SUCCESS!!!')
+    else:
+        print('FAIL!!!')
 
 
