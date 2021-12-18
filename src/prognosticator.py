@@ -79,7 +79,8 @@ class Prognosticator:
                     print('sy', step_luft_y)
             else:
                 break
-
+        print('lx', lufts_x)
+        print('ly', lufts_y)
         return lufts_x, lufts_y
 
     def get_mean_steps(self, lufts_x: list, lufts_y: list):
@@ -91,8 +92,63 @@ class Prognosticator:
         number_of_steps_remaining = math.ceil(remaining_distance / mean_step_x)
         return number_of_steps_remaining
 
-    def ascending_part_analysis(self):
-        pass
+    def ascending_part_analysis(self, world_width: int, ball_radius: int,
+                                sample: list,
+                                first_peak_index: int) -> int:
+        end_point_index = first_peak_index
+        lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
+
+        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
+        print('mean_step_x', mean_step_x)
+        last_detected_step = self.data[-1]
+        remaining_distance = world_width - last_detected_step[0] - ball_radius
+
+        number_of_steps_remaining = self.get_number_of_steps_remaining(remaining_distance, mean_step_x)
+        print('number_of_steps_remaining', number_of_steps_remaining)
+
+        various_lufts = []
+        for luft in lufts_y:
+            if luft in various_lufts:
+                continue
+            else:
+                various_lufts.append(luft)
+        print('var lufts', various_lufts)
+
+        counters = []
+        for luft_value in various_lufts:
+            counter = 0
+            for luft in lufts_y:
+                if luft == luft_value:
+                    counter += 1
+            counters.append(counter)
+
+        sum_counters = 0
+        for counter in counters:
+            sum_counters += counter
+        mean_number_of_luft_value = round(sum_counters / len(counters))
+
+        print('mean number lufts', mean_number_of_luft_value)
+
+        max_luft = max(various_lufts)
+        print('max luft', max_luft)
+        max_luft_counter = 0
+        for luft in lufts_y:
+            if luft == max_luft:
+                max_luft_counter += 1
+        print('max_luft_counter', max_luft_counter)
+
+        if max_luft_counter < mean_number_of_luft_value:
+            remaining_steps_with_max_luft = mean_number_of_luft_value - max_luft_counter
+            if remaining_steps_with_max_luft >= number_of_steps_remaining:
+                predicted_y = last_detected_step[1] + (max_luft * number_of_steps_remaining)
+                return predicted_y
+        else:
+            pass
+
+
+
+
+
 
     def plateau_part_analysis(self, world_width: int, ball_radius: int,
                               sample: list,
@@ -176,4 +232,4 @@ class Prognosticator:
 
             else:
                 # Point on the ascending part of the graph
-                pass
+                self.ascending_part_analysis(world_width, ball_radius, sample, first_peak_index)
