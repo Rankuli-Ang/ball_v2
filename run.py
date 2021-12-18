@@ -80,7 +80,7 @@ if __name__ == "__main__":
             prognosticator.collect_data(aim)
         else:
             if prognosticator.data:
-                prognosis = prognosticator.prognostication(WORLD_WIDTH, BALL_RADIUS)
+                prognosis = prognosticator.prognostication(WORLD_WIDTH, WORLD_HEIGHT, BALL_RADIUS)
                 racket.aiming(WORLD_HEIGHT, prognosis)
                 prognosticator.data.clear()
 

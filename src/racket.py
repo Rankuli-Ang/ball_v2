@@ -17,7 +17,3 @@ class Racket:
     def get_racket_down_edge_y(self) -> int:
         down_edge = self.center_y + self.size
         return down_edge
-
-
-
-
