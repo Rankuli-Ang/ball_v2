@@ -42,7 +42,7 @@ class Prognosticator:
         first_peak = peak_steps[0]
         return first_peak
 
-    def get_first_peak_index(self, first_peak: tuple, sample: list) -> int:
+    def get_first_peak_index(self, sample: list, first_peak: tuple) -> int:
         counter = 0
         for step in sample:
             if step != first_peak:
@@ -54,7 +54,7 @@ class Prognosticator:
         last_peak = peak_steps[-1]
         return last_peak
 
-    def get_last_peak_index(self, last_peak: tuple, sample: list) -> int:
+    def get_last_peak_index(self, sample: list, last_peak: tuple) -> int:
         counter = 0
         for step in sample:
             if step != last_peak:
@@ -62,14 +62,14 @@ class Prognosticator:
             else:
                 return counter
 
-    """def get_lufts(self, slice_graph: list, end_point: int):
+    def get_lufts(self, slice_graph: list, end_point_index: int):
         slice_graph_counter = 0
         lufts_x = []
         lufts_y = []
         for step in slice_graph:
-            if step != first_peak:
-                if slice_graph_counter + 1 < len(sample):
-                    next_step = sample[slice_graph_counter + 1]
+            if slice_graph_counter != end_point_index:
+                if slice_graph_counter + 1 < end_point_index:
+                    next_step = slice_graph[slice_graph_counter + 1]
                     step_luft_x = float(next_step[0]) - float(step[0])
                     step_luft_y = float(next_step[1]) - float(step[1])
                     lufts_x.append(step_luft_x)
@@ -80,45 +80,35 @@ class Prognosticator:
             else:
                 break
 
-            if descending_counter + 1 < len(descending_graph):
-                next_step = descending_graph[descending_counter + 1]"""
+        return lufts_x, lufts_y
 
-
-
-
-    def plateau_part_analysis(self, world_width: int, ball_radius: int,
-                              sample: list, first_peak: tuple, last_peak: tuple) -> int:
-        graph_counter = 0
-        lufts_x = []
-        lufts_y = []
-        for step in sample:
-            if step != first_peak:
-                if graph_counter + 1 < len(sample):
-                    next_step = sample[graph_counter + 1]
-                    ascending_step_luft_x = float(next_step[0]) - float(step[0])
-                    ascending_step_luft_y = float(next_step[1]) - float(step[1])
-                    lufts_x.append(ascending_step_luft_x)
-                    lufts_y.append(ascending_step_luft_y)
-                    graph_counter += 1
-                    print('sx', ascending_step_luft_x)
-                    print('sy', ascending_step_luft_y)
-            else:
-                break
-
-        print('lx', lufts_x)
-        print('ly', lufts_y)
-
+    def get_mean_steps(self, lufts_x: list, lufts_y: list):
         mean_step_x = reduce(lambda m, n: m + n, lufts_x) / len(lufts_x)
         mean_step_y = reduce(lambda m, n: m + n, lufts_y) / len(lufts_y)
+        return mean_step_x, mean_step_y
 
-        print('mx', mean_step_x)
-        print('my', mean_step_y)
+    def get_number_of_steps_remaining(self, remaining_distance: int, mean_step_x: int):
+        number_of_steps_remaining = math.ceil(remaining_distance / mean_step_x)
+        return number_of_steps_remaining
+
+    def ascending_part_analysis(self):
+        pass
+
+    def plateau_part_analysis(self, world_width: int, ball_radius: int,
+                              sample: list,
+                              first_peak_index: int,
+                              last_peak: tuple) -> int:
+        end_point_index = first_peak_index
+        lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
+
+        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
 
         last_sample_step = sample[-1]
-        last_known_step = self.data[-1]
+        last_detected_step = self.data[-1]
         if last_peak == last_sample_step:
-            remaining_distance = world_width - last_known_step[0] - ball_radius
-            remaining_steps = math.ceil(remaining_distance / mean_step_x)
+            remaining_distance = world_width - last_detected_step[0] - ball_radius
+
+            number_of_steps_remaining = self.get_number_of_steps_remaining(remaining_distance, mean_step_x)
 
             max_step_y = max(lufts_y)
             lufts_y_without_max = []
@@ -129,42 +119,23 @@ class Prognosticator:
             previous_max_step_y = max(lufts_y_without_max)
             mean_extreme_step = (max_step_y + previous_max_step_y) / 2
 
-            calculated_deviation_y = last_known_step[1] - (mean_extreme_step * remaining_steps)
-            print('deviation', calculated_deviation_y)
+            calculated_deviation_y = last_detected_step[1] - (mean_extreme_step * number_of_steps_remaining)
             return calculated_deviation_y
 
-    def descending_part_analysis(self, world_height: int, ball_radius: int,
+    def descending_part_analysis(self, world_width: int, ball_radius: int,
                                  sample: list, last_peak_index: int) -> int:
 
         descending_graph = sample[last_peak_index:]
-        print('dg', descending_graph)
-        descending_counter = 0
-        lufts_x = []
-        lufts_y = []
-        for step in descending_graph:
-            if descending_counter + 1 < len(descending_graph):
-                next_step = descending_graph[descending_counter + 1]
-                ascending_step_luft_x = float(next_step[0]) - float(step[0])
-                ascending_step_luft_y = float(next_step[1]) - float(step[1])
-                lufts_x.append(ascending_step_luft_x)
-                lufts_y.append(ascending_step_luft_y)
-                descending_counter += 1
-                print('sx', ascending_step_luft_x)
-                print('sy', ascending_step_luft_y)
+        end_point_index = len(descending_graph)
+        lufts_x, lufts_y = self.get_lufts(descending_graph, end_point_index)
 
-        print('lx', lufts_x)
-        print('ly', lufts_y)
-
-        mean_step_x = reduce(lambda m, n: m + n, lufts_x) / len(lufts_x)
-        mean_step_y = reduce(lambda m, n: m + n, lufts_y) / len(lufts_y)
+        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
 
         last_detected_step = self.data[-1]
-        last_detected_x = last_detected_step[0]
-        last_detected_y = last_detected_step[1]
-        analysis_bias = (world_height - ball_radius) - last_detected_x
+        remaining_distance = world_width - last_detected_step[0] - ball_radius
 
-        number_of_steps_remaining = math.ceil(analysis_bias / mean_step_x)
-        predicted_y = last_detected_y + (mean_step_y * number_of_steps_remaining)
+        number_of_steps_remaining = self.get_number_of_steps_remaining(remaining_distance, mean_step_x)
+        predicted_y = last_detected_step[1] + (mean_step_y * number_of_steps_remaining)
         return predicted_y
 
     def prognostication(self, world_width: int, world_height: int, ball_radius: int) -> int:
@@ -178,8 +149,9 @@ class Prognosticator:
         """Peak detection part."""
         peaks_steps = self.peaks_determination(world_height, sample)
         first_peak = self.get_first_peak(peaks_steps)
+        first_peak_index = self.get_first_peak_index(sample, first_peak)
         last_peak = self.get_last_peak(peaks_steps)
-        last_peak_index = self.get_last_peak_index(last_peak, sample)
+        last_peak_index = self.get_last_peak_index(sample, last_peak)
 
         """Determining the position of a point on the graph."""
         last_sample_step = sample[-1]
@@ -189,7 +161,7 @@ class Prognosticator:
 
         if last_peak[1] < last_sample_step[1]:
             # Point on the descending part of the graph
-            predicted_y = self.descending_part_analysis(world_height, ball_radius,
+            predicted_y = self.descending_part_analysis(world_width, ball_radius,
                                                         sample, last_peak_index)
             return predicted_y
 
@@ -197,7 +169,9 @@ class Prognosticator:
             if last_sample_step_y == previous_sample_step_y:
                 # Point on the plateau part of the graph
                 predicted_y = self.plateau_part_analysis(world_width, ball_radius,
-                                                         sample, first_peak, last_peak)
+                                                         sample,
+                                                         first_peak_index,
+                                                         last_peak)
                 return predicted_y
 
             else:
