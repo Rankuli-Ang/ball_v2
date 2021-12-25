@@ -22,6 +22,8 @@ class Prognosticator:
         return sample
 
     def peaks_determination(self, world_height: int, sample: list) -> list:
+        """Defines all points in a sample with a minimum 'y'."""
+
         min_y = world_height
         peak_steps = []
         step_counter = 0
@@ -39,10 +41,12 @@ class Prognosticator:
         return peak_steps
 
     def get_first_peak(self, peak_steps: list) -> tuple:
+        """Returns first point with a minimum 'y'."""
         first_peak = peak_steps[0]
         return first_peak
 
     def get_first_peak_index(self, sample: list, first_peak: tuple) -> int:
+        """Returns index in simple of first point with a minimum 'y'."""
         counter = 0
         for step in sample:
             if step != first_peak:
@@ -51,10 +55,12 @@ class Prognosticator:
                 return counter
 
     def get_last_peak(self, peak_steps: list) -> tuple:
+        """Returns last point with a minimum 'y'."""
         last_peak = peak_steps[-1]
         return last_peak
 
     def get_last_peak_index(self, sample: list, last_peak: tuple) -> int:
+        """Returns index in simple of last point with a minimum 'y'."""
         counter = 0
         for step in sample:
             if step != last_peak:
@@ -63,6 +69,7 @@ class Prognosticator:
                 return counter
 
     def get_lufts(self, slice_graph: list, end_point_index: int):
+        """Returns 2 lists of lufts between coordinate points."""
         slice_graph_counter = 0
         lufts_x = []
         lufts_y = []
@@ -83,39 +90,69 @@ class Prognosticator:
         print('ly', lufts_y)
         return lufts_x, lufts_y
 
-    def get_mean_steps(self, lufts_x: list, lufts_y: list):
-        mean_step_x = reduce(lambda m, n: m + n, lufts_x) / len(lufts_x)
-        mean_step_y = reduce(lambda m, n: m + n, lufts_y) / len(lufts_y)
-        return mean_step_x, mean_step_y
+    def get_average_steps(self, lufts_x: list, lufts_y: list):
+        """Returns the two average steps in each plane."""
+        average_step_x = reduce(lambda m, n: m + n, lufts_x) / len(lufts_x)
+        average_step_y = reduce(lambda m, n: m + n, lufts_y) / len(lufts_y)
+        return average_step_x, average_step_y
 
     def get_number_of_steps_remaining(self, remaining_distance: int, mean_step_x: int):
+        """Returns the number of averaged steps remaining to the target along the plane 'x'."""
         number_of_steps_remaining = math.ceil(remaining_distance / mean_step_x)
         return number_of_steps_remaining
+
+    # terrible naming need to fix
+
+    def get_luft_of_lufts(self, lufts: list) -> float:
+        """Returns the average difference between lufts."""
+        differences = []
+        counter = 0
+        for luft in lufts:
+            if luft != lufts[-1]:
+                counter += 1
+                next_luft = lufts[counter]
+                difference = luft - next_luft
+                differences.append(difference)
+
+        sum_lufts = 0
+        for difference in differences:
+            sum_lufts += difference
+
+        result = abs(sum_lufts / len(differences))
+        return result
 
     def ascending_part_analysis(self, world_width: int, ball_radius: int,
                                 sample: list,
                                 first_peak_index: int) -> int:
+        """"""
+
+        # unite mean and average
+
+        """"""
         end_point_index = first_peak_index
         lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
 
-        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
+        mean_step_x, mean_step_y = self.get_average_steps(lufts_x, lufts_y)
         print('mean_step_x', mean_step_x)
         last_detected_step = self.data[-1]
         remaining_distance = world_width - last_detected_step[0] - ball_radius
+        print('remaining distance', remaining_distance)
 
         number_of_steps_remaining = self.get_number_of_steps_remaining(remaining_distance, mean_step_x)
         print('number_of_steps_remaining', number_of_steps_remaining)
 
-        various_lufts = []
+        # scatter on separate methods
+
+        different_lufts = []
         for luft in lufts_y:
-            if luft in various_lufts:
+            if luft in different_lufts:
                 continue
             else:
-                various_lufts.append(luft)
-        print('var lufts', various_lufts)
+                different_lufts.append(luft)
+        print('diff lufts', different_lufts)
 
         counters = []
-        for luft_value in various_lufts:
+        for luft_value in different_lufts:
             counter = 0
             for luft in lufts_y:
                 if luft == luft_value:
@@ -129,7 +166,7 @@ class Prognosticator:
 
         print('mean number lufts', mean_number_of_luft_value)
 
-        max_luft = max(various_lufts)
+        max_luft = max(different_lufts)
         print('max luft', max_luft)
         max_luft_counter = 0
         for luft in lufts_y:
@@ -137,18 +174,45 @@ class Prognosticator:
                 max_luft_counter += 1
         print('max_luft_counter', max_luft_counter)
 
+        transitional_y = last_detected_step[1]
+        not_processed_remaining_steps = number_of_steps_remaining
+
         if max_luft_counter < mean_number_of_luft_value:
             remaining_steps_with_max_luft = mean_number_of_luft_value - max_luft_counter
+            print('remaining s with max luft', remaining_steps_with_max_luft)
             if remaining_steps_with_max_luft >= number_of_steps_remaining:
                 predicted_y = last_detected_step[1] + (max_luft * number_of_steps_remaining)
                 return predicted_y
-        else:
+            else:
+                transitional_y += remaining_steps_with_max_luft * max_luft
+                not_processed_remaining_steps -= remaining_steps_with_max_luft
+
+        luft_difference_y = self.get_luft_of_lufts(lufts_y)
+        print('luft difference', luft_difference_y)
+
+        if max_luft < 0:
             pass
 
 
 
 
+        different_lufts_without_max = different_lufts
+        different_lufts_without_max.remove(max_luft)
 
+        print('diff lufts without max', different_lufts_without_max)
+
+        for luft in different_lufts_without_max:
+            if not_processed_remaining_steps > mean_number_of_luft_value:
+                transitional_y += luft * mean_number_of_luft_value
+                not_processed_remaining_steps -= mean_number_of_luft_value
+            elif not_processed_remaining_steps == mean_number_of_luft_value:
+                transitional_y += luft * mean_number_of_luft_value
+                predicted_y = transitional_y
+                return predicted_y
+            else:
+                transitional_y += luft * not_processed_remaining_steps
+                predicted_y = transitional_y
+                return predicted_y
 
     def plateau_part_analysis(self, world_width: int, ball_radius: int,
                               sample: list,
@@ -157,7 +221,7 @@ class Prognosticator:
         end_point_index = first_peak_index
         lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
 
-        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
+        mean_step_x, mean_step_y = self.get_average_steps(lufts_x, lufts_y)
 
         last_sample_step = sample[-1]
         last_detected_step = self.data[-1]
@@ -185,7 +249,7 @@ class Prognosticator:
         end_point_index = len(descending_graph)
         lufts_x, lufts_y = self.get_lufts(descending_graph, end_point_index)
 
-        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
+        mean_step_x, mean_step_y = self.get_average_steps(lufts_x, lufts_y)
 
         last_detected_step = self.data[-1]
         remaining_distance = world_width - last_detected_step[0] - ball_radius
@@ -200,7 +264,7 @@ class Prognosticator:
         """sampling part"""
         sample = self.sampling()
 
-        print('ls', sample[-1])
+        print('last simple', sample[-1])
 
         """Peak detection part."""
         peaks_steps = self.peaks_determination(world_height, sample)
