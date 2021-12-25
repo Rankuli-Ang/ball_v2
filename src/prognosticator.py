@@ -82,8 +82,6 @@ class Prognosticator:
                     lufts_x.append(step_luft_x)
                     lufts_y.append(step_luft_y)
                     slice_graph_counter += 1
-                    print('sx', step_luft_x)
-                    print('sy', step_luft_y)
             else:
                 break
         print('lx', lufts_x)
@@ -103,14 +101,14 @@ class Prognosticator:
 
     # terrible naming need to fix
 
-    def get_luft_of_lufts(self, lufts: list) -> float:
+    def get_luft_of_lufts(self, different_lufts: list) -> float:
         """Returns the average difference between lufts."""
         differences = []
         counter = 0
-        for luft in lufts:
-            if luft != lufts[-1]:
+        for luft in different_lufts:
+            if luft != different_lufts[-1]:
                 counter += 1
-                next_luft = lufts[counter]
+                next_luft = different_lufts[counter]
                 difference = luft - next_luft
                 differences.append(difference)
 
@@ -118,7 +116,7 @@ class Prognosticator:
         for difference in differences:
             sum_lufts += difference
 
-        result = abs(sum_lufts / len(differences))
+        result = abs(round((sum_lufts / len(differences)), 1))
         return result
 
     def ascending_part_analysis(self, world_width: int, ball_radius: int,
@@ -143,16 +141,16 @@ class Prognosticator:
 
         # scatter on separate methods
 
-        different_lufts = []
+        different_lufts_y = []
         for luft in lufts_y:
-            if luft in different_lufts:
+            if luft in different_lufts_y:
                 continue
             else:
-                different_lufts.append(luft)
-        print('diff lufts', different_lufts)
+                different_lufts_y.append(luft)
+        print('diff lufts', different_lufts_y)
 
         counters = []
-        for luft_value in different_lufts:
+        for luft_value in different_lufts_y:
             counter = 0
             for luft in lufts_y:
                 if luft == luft_value:
@@ -166,51 +164,84 @@ class Prognosticator:
 
         print('mean number lufts', mean_number_of_luft_value)
 
-        max_luft = max(different_lufts)
-        print('max luft', max_luft)
+        max_luft_y = max(different_lufts_y)
+        print('max luft', max_luft_y)
         max_luft_counter = 0
         for luft in lufts_y:
-            if luft == max_luft:
+            if luft == max_luft_y:
                 max_luft_counter += 1
         print('max_luft_counter', max_luft_counter)
 
         transitional_y = last_detected_step[1]
         not_processed_remaining_steps = number_of_steps_remaining
+        print('first not processed steps', not_processed_remaining_steps)
 
         if max_luft_counter < mean_number_of_luft_value:
             remaining_steps_with_max_luft = mean_number_of_luft_value - max_luft_counter
             print('remaining s with max luft', remaining_steps_with_max_luft)
             if remaining_steps_with_max_luft >= number_of_steps_remaining:
-                predicted_y = last_detected_step[1] + (max_luft * number_of_steps_remaining)
+                predicted_y = last_detected_step[1] + (max_luft_y * number_of_steps_remaining)
                 return predicted_y
             else:
-                transitional_y += remaining_steps_with_max_luft * max_luft
+                transitional_y += remaining_steps_with_max_luft * max_luft_y
                 not_processed_remaining_steps -= remaining_steps_with_max_luft
+                print('after max luft not processed steps', not_processed_remaining_steps)
 
-        luft_difference_y = self.get_luft_of_lufts(lufts_y)
+        luft_difference_y = self.get_luft_of_lufts(different_lufts_y)
         print('luft difference', luft_difference_y)
 
-        if max_luft < 0:
-            pass
+        """From max_y to zero_y part."""
+        if max_luft_y < 0:
+            result_luft = max_luft_y
+            steps_to_zero = 0
+            while result_luft < 0:
+                result_luft += luft_difference_y
+                steps_to_zero += 1
+            print('luft steps to zero', steps_to_zero)
 
+            double_mean_number_of_luft_value = mean_number_of_luft_value * 2
+            if steps_to_zero == 1:
+                if not_processed_remaining_steps <= double_mean_number_of_luft_value:
+                    predicted_y = transitional_y
+                    return predicted_y
+                else:
+                    not_processed_remaining_steps -= double_mean_number_of_luft_value
+            else:
+                while steps_to_zero > 1:
+                    new_luft = max_luft_y + luft_difference_y
+                    if not_processed_remaining_steps >= mean_number_of_luft_value:
+                        not_processed_remaining_steps -= mean_number_of_luft_value
+                        transitional_y += new_luft * mean_number_of_luft_value
+                        if not_processed_remaining_steps <= 0:
+                            predicted_y = transitional_y
+                            return predicted_y
+                not_processed_remaining_steps -= double_mean_number_of_luft_value
+                if not_processed_remaining_steps <= 0:
+                    predicted_y = transitional_y
+                    return predicted_y
 
+        """Descending part."""
 
+        different_lufts_reverse = []
+        for luft in different_lufts_y:
+            new_luft = abs(luft)
+            different_lufts_reverse.append(new_luft)
 
-        different_lufts_without_max = different_lufts
-        different_lufts_without_max.remove(max_luft)
+        different_lufts_reverse = sorted(different_lufts_reverse)
 
-        print('diff lufts without max', different_lufts_without_max)
+        print('diff lufts reverse', different_lufts_reverse)
 
-        for luft in different_lufts_without_max:
+        for luft in different_lufts_reverse:
             if not_processed_remaining_steps > mean_number_of_luft_value:
-                transitional_y += luft * mean_number_of_luft_value
+                transitional_y += abs(luft) * mean_number_of_luft_value
                 not_processed_remaining_steps -= mean_number_of_luft_value
+                print('not processed steps', not_processed_remaining_steps)
             elif not_processed_remaining_steps == mean_number_of_luft_value:
-                transitional_y += luft * mean_number_of_luft_value
+                transitional_y += abs(luft) * mean_number_of_luft_value
                 predicted_y = transitional_y
                 return predicted_y
             else:
-                transitional_y += luft * not_processed_remaining_steps
+                transitional_y += abs(luft) * not_processed_remaining_steps
                 predicted_y = transitional_y
                 return predicted_y
 
@@ -281,19 +312,19 @@ class Prognosticator:
 
         if last_peak[1] < last_sample_step[1]:
             # Point on the descending part of the graph
-            predicted_y = self.descending_part_analysis(world_width, ball_radius,
-                                                        sample, last_peak_index)
+            predicted_y = self.descending_part_analysis(world_width, ball_radius, sample,
+                                                        last_peak_index)
             return predicted_y
 
         else:
             if last_sample_step_y == previous_sample_step_y:
                 # Point on the plateau part of the graph
-                predicted_y = self.plateau_part_analysis(world_width, ball_radius,
-                                                         sample,
-                                                         first_peak_index,
-                                                         last_peak)
+                predicted_y = self.plateau_part_analysis(world_width, ball_radius, sample,
+                                                         first_peak_index, last_peak)
                 return predicted_y
 
             else:
                 # Point on the ascending part of the graph
-                self.ascending_part_analysis(world_width, ball_radius, sample, first_peak_index)
+                predicted_y = self.ascending_part_analysis(world_width, ball_radius, sample,
+                                                           first_peak_index)
+                return predicted_y
