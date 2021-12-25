@@ -83,8 +83,6 @@ class Prognosticator:
                     slice_graph_counter += 1
             else:
                 break
-        print('lx', lufts_x)
-        print('ly', lufts_y)
         return lufts_x, lufts_y
 
     def get_average_steps(self, lufts_x: list, lufts_y: list):
@@ -131,13 +129,10 @@ class Prognosticator:
         lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
 
         mean_step_x, mean_step_y = self.get_average_steps(lufts_x, lufts_y)
-        print('mean_step_x', mean_step_x)
         last_detected_step = self.data[-1]
         remaining_distance = world_width - last_detected_step[0] - ball_radius
-        print('remaining distance', remaining_distance)
 
         number_of_steps_remaining = self.get_number_of_steps_remaining(remaining_distance, mean_step_x)
-        print('number_of_steps_remaining', number_of_steps_remaining)
 
         # scatter on separate methods
 
@@ -147,7 +142,6 @@ class Prognosticator:
                 continue
             else:
                 different_lufts_y.append(luft)
-        print('diff lufts', different_lufts_y)
 
         counters = []
         for luft_value in different_lufts_y:
@@ -162,33 +156,25 @@ class Prognosticator:
             sum_counters += counter
         mean_number_of_luft_value = round(sum_counters / len(counters))
 
-        print('mean number lufts', mean_number_of_luft_value)
-
         max_luft_y = max(different_lufts_y)
-        print('max luft', max_luft_y)
         max_luft_counter = 0
         for luft in lufts_y:
             if luft == max_luft_y:
                 max_luft_counter += 1
-        print('max_luft_counter', max_luft_counter)
 
         transitional_y = last_detected_step[1]
         not_processed_remaining_steps = number_of_steps_remaining
-        print('first not processed steps', not_processed_remaining_steps)
 
         if max_luft_counter < mean_number_of_luft_value:
             remaining_steps_with_max_luft = mean_number_of_luft_value - max_luft_counter
-            print('remaining s with max luft', remaining_steps_with_max_luft)
             if remaining_steps_with_max_luft >= number_of_steps_remaining:
                 predicted_y = last_detected_step[1] + (max_luft_y * number_of_steps_remaining)
                 return predicted_y
             else:
                 transitional_y += remaining_steps_with_max_luft * max_luft_y
                 not_processed_remaining_steps -= remaining_steps_with_max_luft
-                print('after max luft not processed steps', not_processed_remaining_steps)
 
         luft_difference_y = self.get_luft_of_lufts(different_lufts_y)
-        print('luft difference', luft_difference_y)
 
         """From max_y to zero_y part."""
         if max_luft_y < 0:
@@ -197,7 +183,6 @@ class Prognosticator:
             while result_luft < 0:
                 result_luft += luft_difference_y
                 steps_to_zero += 1
-            print('luft steps to zero', steps_to_zero)
 
             double_mean_number_of_luft_value = mean_number_of_luft_value * 2
             if steps_to_zero == 1:
@@ -230,13 +215,10 @@ class Prognosticator:
 
         different_lufts_reverse = sorted(different_lufts_reverse)
 
-        print('diff lufts reverse', different_lufts_reverse)
-
         for luft in different_lufts_reverse:
             if not_processed_remaining_steps > mean_number_of_luft_value:
                 transitional_y += abs(luft) * mean_number_of_luft_value
                 not_processed_remaining_steps -= mean_number_of_luft_value
-                print('not processed steps', not_processed_remaining_steps)
             elif not_processed_remaining_steps == mean_number_of_luft_value:
                 transitional_y += abs(luft) * mean_number_of_luft_value
                 predicted_y = transitional_y
@@ -300,8 +282,6 @@ class Prognosticator:
 
         """sampling part"""
         sample = self.sampling()
-
-        print('last simple', sample[-1])
 
         """Peak detection part."""
         peaks_steps = self.peaks_determination(world_height, sample)
