@@ -1,6 +1,5 @@
 import math
 from functools import reduce
-from math import ceil
 
 
 class Prognosticator:
@@ -122,11 +121,12 @@ class Prognosticator:
     def ascending_part_analysis(self, world_width: int, ball_radius: int,
                                 sample: list,
                                 first_peak_index: int) -> int:
-        """"""
+        """Predicts the remaining up, plateau,
+        and downtrend of the ball and returns the predicted_y. """
 
         # unite mean and average
 
-        """"""
+        """Preparatory phase."""
         end_point_index = first_peak_index
         lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
 
@@ -215,6 +215,7 @@ class Prognosticator:
                         if not_processed_remaining_steps <= 0:
                             predicted_y = transitional_y
                             return predicted_y
+                    steps_to_zero -= 1
                 not_processed_remaining_steps -= double_mean_number_of_luft_value
                 if not_processed_remaining_steps <= 0:
                     predicted_y = transitional_y
@@ -249,6 +250,8 @@ class Prognosticator:
                               sample: list,
                               first_peak_index: int,
                               last_peak: tuple) -> int:
+        """Predicts the remaining plateau,
+        and downtrend of the ball and returns the predicted_y. """
         end_point_index = first_peak_index
         lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
 
@@ -275,6 +278,8 @@ class Prognosticator:
 
     def descending_part_analysis(self, world_width: int, ball_radius: int,
                                  sample: list, last_peak_index: int) -> int:
+        """Predicts the remaining downtrend of the ball
+        and returns the predicted_y. """
 
         descending_graph = sample[last_peak_index:]
         end_point_index = len(descending_graph)
@@ -290,7 +295,8 @@ class Prognosticator:
         return predicted_y
 
     def prognostication(self, world_width: int, world_height: int, ball_radius: int) -> int:
-        """"""
+        """Determines which part of the movement the ball is in,
+        predicts further movement and returns the predicted_y."""
 
         """sampling part"""
         sample = self.sampling()
