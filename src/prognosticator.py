@@ -3,6 +3,9 @@ from functools import reduce
 
 
 class Prognosticator:
+    """The object analyzes all the collected data in the field for analysis,
+     processes and predicts the point where the ball will be
+      at the end of the field of motion."""
 
     def __init__(self):
         self.data: list = []
@@ -69,6 +72,8 @@ class Prognosticator:
 
     def get_lufts(self, slice_graph: list, end_point_index: int):
         """Returns 2 lists of lufts between coordinate points."""
+
+        """Luft is the distance between two points."""
         slice_graph_counter = 0
         lufts_x = []
         lufts_y = []
@@ -85,21 +90,19 @@ class Prognosticator:
                 break
         return lufts_x, lufts_y
 
-    def get_average_steps(self, lufts_x: list, lufts_y: list):
-        """Returns the two average steps in each plane."""
-        average_step_x = reduce(lambda m, n: m + n, lufts_x) / len(lufts_x)
-        average_step_y = reduce(lambda m, n: m + n, lufts_y) / len(lufts_y)
-        return average_step_x, average_step_y
+    def get_mean_steps(self, lufts_x: list, lufts_y: list):
+        """Returns the mean steps in each plane."""
+        mean_step_x = reduce(lambda m, n: m + n, lufts_x) / len(lufts_x)
+        mean_step_y = reduce(lambda m, n: m + n, lufts_y) / len(lufts_y)
+        return mean_step_x, mean_step_y
 
     def get_number_of_steps_remaining(self, remaining_distance: int, mean_step_x: int):
-        """Returns the number of averaged steps remaining to the target along the plane 'x'."""
+        """Returns the number of mean steps remaining to the target along the plane 'x'."""
         number_of_steps_remaining = math.ceil(remaining_distance / mean_step_x)
         return number_of_steps_remaining
 
-    # terrible naming need to fix
-
-    def get_luft_of_lufts(self, different_lufts: list) -> float:
-        """Returns the average difference between lufts."""
+    def get_mean_difference_of_lufts(self, different_lufts: list) -> float:
+        """Returns the mean difference between lufts."""
         differences = []
         counter = 0
         for luft in different_lufts:
@@ -116,45 +119,47 @@ class Prognosticator:
         result = abs(round((sum_lufts / len(differences)), 1))
         return result
 
+    def get_different_lufts(self, lufts: list) -> list:
+        different_lufts = []
+        for luft in lufts:
+            if luft in different_lufts:
+                continue
+            else:
+                different_lufts.append(luft)
+        return different_lufts
+
     def ascending_part_analysis(self, world_width: int, ball_radius: int,
                                 sample: list,
                                 first_peak_index: int) -> int:
         """Predicts the remaining up, plateau,
-        and downtrend of the ball and returns the predicted_y. """
-
-        # unite mean and average
+        and downtrend of the ball and returns the predicted 'y'. """
 
         """Preparatory phase."""
         end_point_index = first_peak_index
         lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
 
-        mean_step_x, mean_step_y = self.get_average_steps(lufts_x, lufts_y)
+        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
         last_detected_step = self.data[-1]
         remaining_distance = world_width - last_detected_step[0] - ball_radius
 
         number_of_steps_remaining = self.get_number_of_steps_remaining(remaining_distance, mean_step_x)
 
-        # scatter on separate methods
+        """Luft processing phase."""
 
-        different_lufts_y = []
-        for luft in lufts_y:
-            if luft in different_lufts_y:
-                continue
-            else:
-                different_lufts_y.append(luft)
+        different_lufts_y = self.get_different_lufts(lufts_y)
 
-        counters = []
+        luft_counters = []
         for luft_value in different_lufts_y:
             counter = 0
             for luft in lufts_y:
                 if luft == luft_value:
                     counter += 1
-            counters.append(counter)
+            luft_counters.append(counter)
 
         sum_counters = 0
-        for counter in counters:
+        for counter in luft_counters:
             sum_counters += counter
-        mean_number_of_luft_value = round(sum_counters / len(counters))
+        mean_number_of_luft_value = round(sum_counters / len(luft_counters))
 
         max_luft_y = max(different_lufts_y)
         max_luft_counter = 0
@@ -174,7 +179,7 @@ class Prognosticator:
                 transitional_y += remaining_steps_with_max_luft * max_luft_y
                 not_processed_remaining_steps -= remaining_steps_with_max_luft
 
-        luft_difference_y = self.get_luft_of_lufts(different_lufts_y)
+        luft_difference_y = self.get_mean_difference_of_lufts(different_lufts_y)
 
         """From max_y to zero_y part."""
         if max_luft_y < 0:
@@ -237,7 +242,7 @@ class Prognosticator:
         end_point_index = first_peak_index
         lufts_x, lufts_y = self.get_lufts(sample, end_point_index)
 
-        mean_step_x, mean_step_y = self.get_average_steps(lufts_x, lufts_y)
+        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
 
         last_sample_step = sample[-1]
         last_detected_step = self.data[-1]
@@ -267,7 +272,7 @@ class Prognosticator:
         end_point_index = len(descending_graph)
         lufts_x, lufts_y = self.get_lufts(descending_graph, end_point_index)
 
-        mean_step_x, mean_step_y = self.get_average_steps(lufts_x, lufts_y)
+        mean_step_x, mean_step_y = self.get_mean_steps(lufts_x, lufts_y)
 
         last_detected_step = self.data[-1]
         remaining_distance = world_width - last_detected_step[0] - ball_radius
@@ -280,7 +285,6 @@ class Prognosticator:
         """Determines which part of the movement the ball is in,
         predicts further movement and returns the predicted_y."""
 
-        """sampling part"""
         sample = self.sampling()
 
         """Peak detection part."""

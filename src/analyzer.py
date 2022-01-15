@@ -27,9 +27,7 @@ class Analyzer:
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
                 center = (i[0], i[1])
-                # circle center
                 cv2.circle(gray, center, 1, (0, 100, 100), 3)
-                # circle outline
                 radius = i[2]
                 cv2.circle(gray, center, radius, (255, 0, 255), 3)
                 cv2.imshow("detected_circle", gray)

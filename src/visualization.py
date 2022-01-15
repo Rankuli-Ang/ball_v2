@@ -23,6 +23,7 @@ class World:
         self.racket_color = racket_color
 
     def draw_frame(self, visualization) -> None:
+        """Draws the edges of the specified data collection field."""
         start_frame_counter = 0
         end_frame_counter = 0
 
@@ -36,6 +37,7 @@ class World:
 
     def draw_racket(self, visualization,
                     racket_plane: int, racket_center: int, racket_size: int) -> None:
+        """Draws a racket."""
         counter = 0
         while counter <= racket_size:
             if racket_center + counter < self.height:
@@ -45,6 +47,7 @@ class World:
             counter += 1
 
     def draw_ball(self, visualization, ball_x: int, ball_y: int) -> None:
+        """Draws a ball."""
         cv2.circle(visualization, (ball_y, ball_x), self.ball_radius, self.ball_color, thickness=-1)
 
     def visualize(self, ball_x: int, ball_y: int,

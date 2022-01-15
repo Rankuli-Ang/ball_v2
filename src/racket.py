@@ -11,9 +11,11 @@ class Racket:
         self.center_y = round(min(max(aim_center_y, 1), world_height))
 
     def get_racket_upper_edge_y(self) -> int:
+        """Returns the coordinate of the upper edge of the racket."""
         upper_edge = self.center_y - self.size
         return upper_edge
 
     def get_racket_down_edge_y(self) -> int:
+        """Returns the coordinate of the down edge of the racket."""
         down_edge = self.center_y + self.size
         return down_edge
