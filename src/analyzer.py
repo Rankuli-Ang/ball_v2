@@ -1,14 +1,15 @@
+"""The module contains Analyzer class."""
 import numpy as np
 import cv2
 
 
 class Analyzer:
-    """A class that analyzes the movement of the ball
+    """A class analyzes the movement of the ball
      and transfers the coordinates to the racket."""
 
     def __init__(self, start_frame: int, end_frame: int):
-        self.start_frame = start_frame
-        self.end_frame = end_frame
+        self.start_frame: int = start_frame
+        self.end_frame: int = end_frame
 
     def analyze(self) -> tuple:
         """Detected ball in the picture of the simulation
@@ -31,6 +32,5 @@ class Analyzer:
                 radius = i[2]
                 cv2.circle(gray, center, radius, (255, 0, 255), 3)
                 cv2.imshow("detected_circle", gray)
-                cv2.waitKey(100)
-                print('ball coordinates', center)
+                cv2.waitKey(10)
                 return center

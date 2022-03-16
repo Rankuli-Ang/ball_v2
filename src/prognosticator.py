@@ -1,74 +1,50 @@
+"""The module contains Prognosticator class."""
 import math
 from functools import reduce
 
 
 class Prognosticator:
-    """The object analyzes all the collected data in the field for analysis,
+    """The Prognosticator analyzes all the collected data in the field for analysis,
      processes and predicts the point where the ball will be
       at the end of the field of motion."""
 
-    def __init__(self):
+    def __init__(self, world_height: int):
+        self.world_height: int = world_height
         self.data: list = []
+        self.sample: list = []
+
+        self.peak_steps: list = []
+        self.first_peak_index: int = 0
+        self.last_peak_index: int = 0
 
     def collect_data(self, data: tuple) -> None:
         """Saves the received coordinates of the ball to the list."""
         self.data.append(data)
 
-    def sampling(self) -> list:
+    def sampling(self) -> None:
         """Discards the tails of received data."""
 
         """When the ball enters and leaves the detection zone,
                 the extremes contain noise.
                 For this reason, extrema are removed from the sample. """
-        sample = self.data[3:-1]
-        return sample
+        self.sample = self.data[3:-1]
 
-    def peaks_determination(self, world_height: int, sample: list) -> list:
+    def peaks_determination(self) -> None:
         """Defines all points in a sample with a minimum 'y'."""
+        min_y = self.world_height
+        current_index = 0
 
-        min_y = world_height
-        peak_steps = []
-        step_counter = 0
-
-        for step in sample:
+        for step in self.sample:
             if step[1] < min_y:
                 min_y = step[1]
-                peak_steps.clear()
-                peak_steps.append(step)
-                step_counter += 1
-
+                self.peak_steps.clear()
+                self.peak_steps.append(step)
+                self.first_peak_index = current_index
+                self.last_peak_index = current_index
             elif step[1] == min_y:
-                peak_steps.append(step)
-
-        return peak_steps
-
-    def get_first_peak(self, peak_steps: list) -> tuple:
-        """Returns first point with a minimum 'y'."""
-        first_peak = peak_steps[0]
-        return first_peak
-
-    def get_first_peak_index(self, sample: list, first_peak: tuple) -> int:
-        """Returns index in simple of first point with a minimum 'y'."""
-        counter = 0
-        for step in sample:
-            if step != first_peak:
-                counter += 1
-            else:
-                return counter
-
-    def get_last_peak(self, peak_steps: list) -> tuple:
-        """Returns last point with a minimum 'y'."""
-        last_peak = peak_steps[-1]
-        return last_peak
-
-    def get_last_peak_index(self, sample: list, last_peak: tuple) -> int:
-        """Returns index in simple of last point with a minimum 'y'."""
-        counter = 0
-        for step in sample:
-            if step != last_peak:
-                counter += 1
-            else:
-                return counter
+                self.peak_steps.append(step)
+                self.last_peak_index = current_index
+            current_index += 1
 
     def get_lufts(self, slice_graph: list, end_point_index: int):
         """Returns 2 lists of lufts between coordinate points."""
@@ -120,6 +96,7 @@ class Prognosticator:
         return result
 
     def get_different_lufts(self, lufts: list) -> list:
+        """Return list of different lufts, from list of lufts."""
         different_lufts = []
         for luft in lufts:
             if luft in different_lufts:
@@ -127,6 +104,22 @@ class Prognosticator:
             else:
                 different_lufts.append(luft)
         return different_lufts
+
+    def get_mean_number_of_luft_value(self, lufts: list, different_lufts: list) -> int:
+        """Returns the value of the mean frequency of occurrence of a single luft."""
+        luft_counters = []
+        for luft_value in different_lufts:
+            counter = 0
+            for luft in lufts:
+                if luft == luft_value:
+                    counter += 1
+            luft_counters.append(counter)
+
+        sum_counters = 0
+        for counter in luft_counters:
+            sum_counters += counter
+        mean_number_of_luft_value = round(sum_counters / len(luft_counters))
+        return mean_number_of_luft_value
 
     def ascending_part_analysis(self, world_width: int, ball_radius: int,
                                 sample: list,
@@ -148,24 +141,15 @@ class Prognosticator:
 
         different_lufts_y = self.get_different_lufts(lufts_y)
 
-        luft_counters = []
-        for luft_value in different_lufts_y:
-            counter = 0
-            for luft in lufts_y:
-                if luft == luft_value:
-                    counter += 1
-            luft_counters.append(counter)
-
-        sum_counters = 0
-        for counter in luft_counters:
-            sum_counters += counter
-        mean_number_of_luft_value = round(sum_counters / len(luft_counters))
+        mean_number_of_luft_value = self.get_mean_number_of_luft_value(lufts_y, different_lufts_y)
 
         max_luft_y = max(different_lufts_y)
         max_luft_counter = 0
         for luft in lufts_y:
             if luft == max_luft_y:
                 max_luft_counter += 1
+
+        """Remains steps with max luft."""
 
         transitional_y = last_detected_step[1]
         not_processed_remaining_steps = number_of_steps_remaining
@@ -285,36 +269,34 @@ class Prognosticator:
         """Determines which part of the movement the ball is in,
         predicts further movement and returns the predicted_y."""
 
-        sample = self.sampling()
+        self.sampling()
 
         """Peak detection part."""
-        peaks_steps = self.peaks_determination(world_height, sample)
-        first_peak = self.get_first_peak(peaks_steps)
-        first_peak_index = self.get_first_peak_index(sample, first_peak)
-        last_peak = self.get_last_peak(peaks_steps)
-        last_peak_index = self.get_last_peak_index(sample, last_peak)
+        self.peaks_determination()
+        # last_peak = self.get_last_peak(self.peak_steps)
+        # last_peak_index = self.get_last_peak_index(self.sample, last_peak)
 
         """Determining the position of a point on the graph."""
-        last_sample_step = sample[-1]
+        last_sample_step = self.sample[-1]
         last_sample_step_y = last_sample_step[1]
-        previous_sample_step = sample[-2]
+        previous_sample_step = self.sample[-2]
         previous_sample_step_y = previous_sample_step[1]
 
-        if last_peak[1] < last_sample_step[1]:
+        if self.peak_steps[-1][1] < last_sample_step[1]:
             # Point on the descending part of the graph
-            predicted_y = self.descending_part_analysis(world_width, ball_radius, sample,
-                                                        last_peak_index)
+            predicted_y = self.descending_part_analysis(world_width, ball_radius, self.sample,
+                                                        self.last_peak_index)
             return predicted_y
 
         else:
             if last_sample_step_y == previous_sample_step_y:
                 # Point on the plateau part of the graph
-                predicted_y = self.plateau_part_analysis(world_width, ball_radius, sample,
-                                                         first_peak_index, last_peak)
+                predicted_y = self.plateau_part_analysis(world_width, ball_radius, self.sample,
+                                                         self.first_peak_index, self.peak_steps[-1])
                 return predicted_y
 
             else:
                 # Point on the ascending part of the graph
-                predicted_y = self.ascending_part_analysis(world_width, ball_radius, sample,
-                                                           first_peak_index)
+                predicted_y = self.ascending_part_analysis(world_width, ball_radius, self.sample,
+                                                           self.first_peak_index)
                 return predicted_y

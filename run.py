@@ -1,4 +1,5 @@
-from src.visualization import World
+"""The main simulation module."""
+from src.world import World
 from src.ball import Ball
 from src.racket import Racket
 from src.analyzer import Analyzer
@@ -46,24 +47,22 @@ if __name__ == "__main__":
 
     ball = Ball(BALL_START_X, BALL_START_Y, BALL_RADIUS)
 
-    ball.horizontal_v = HORIZONTAL_V
-    ball.horizontal_a = HORIZONTAL_A
-
-    ball.vertical_v = VERTICAL_V
-    ball.vertical_a = VERTICAL_A
+    ball.primary_settings(
+        HORIZONTAL_V, HORIZONTAL_A,
+        VERTICAL_V, VERTICAL_A)
 
     """racket settings"""
     RACKET_CENTER_Y = config.getint('RACKET', 'center_y')
-    RACKET_SIZE = config.getint('RACKET', 'size')
+    RACKET_SIDE = config.getint('RACKET', 'side')
     RACKET_PLANE_X = config.getint('RACKET', 'racket_plane_x')
 
-    racket = Racket(RACKET_PLANE_X, RACKET_CENTER_Y, RACKET_SIZE)
+    racket = Racket(RACKET_PLANE_X, RACKET_CENTER_Y, RACKET_SIDE)
 
     """analyzer settings"""
     analyzer = Analyzer(START_FRAME, END_FRAME)
 
     """prognosticator settings"""
-    prognosticator = Prognosticator()
+    prognosticator = Prognosticator(WORLD_HEIGHT)
 
     """main part"""
     time = 0
@@ -73,7 +72,7 @@ if __name__ == "__main__":
         ball.vertical_shift(time)
         ball.vertical_acceleration_decrease(VERT_DECREASE)
         ball.update_borders()
-        world.visualize(ball.center_y, ball.center_x, racket.plane_x, racket.center_y, racket.size)
+        world.visualize(ball.center_y, ball.center_x, racket.plane_x, racket.center_y, racket.side)
         aim = analyzer.analyze()
         if aim is not None:
             racket.aiming(WORLD_HEIGHT, aim[1])
